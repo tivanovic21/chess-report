@@ -55,9 +55,12 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/@chrisoakman/chessboard2/dist/chessboard2.min.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/@chrisoakman/chessboard2/dist/chessboard2.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -115,9 +118,12 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/@chrisoakman/chessboard2/dist/chessboard2.min.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/@chrisoakman/chessboard2/dist/chessboard2.min.js"
+            ]
           }
         }
       }

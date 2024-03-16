@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ChessBoardComponent } from './chess-board/chess-board.component';
 
 const routes: Routes = [
-  { path: '/', component: ChessBoardComponent }
+  { path: '', component: ChessBoardComponent }
 ];
 
 @NgModule({
