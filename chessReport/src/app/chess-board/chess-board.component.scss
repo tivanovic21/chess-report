@@ -1,7 +1,90 @@
+#chessboard-component {
+    display: flex;
+    justify-content: space-evenly;
+
+    #game-options {
+        margin-left: 10px;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid greenyellow;
+        border-radius: 10px;
+
+
+        #navigation {
+            display: flex;
+            flex-direction: column;
+            margin-top: 1%;
+            padding: 10px;
+            justify-content: center;
+            align-items: center;
+            
+            #arrows {
+                display: grid;
+                grid-template-columns: auto;
+                grid-template-rows: auto auto;
+                grid-gap: 5px;
+                width: 600px;
+                
+                #up {
+                    grid-column: 2;
+                    grid-row: 1;
+                }
+                
+                #down {
+                    grid-column: 2;
+                    grid-row: 2;
+                }
+                
+                #left {
+                    grid-column: 1;
+                    grid-row: 2;
+                }
+                
+                #right {
+                    grid-column: 3;
+                    grid-row: 2;
+                }
+            }
+
+            #board-options{
+                & button {
+                    margin-top: 1%;
+                    width: 600px;
+                }
+            }
+            
+            button {
+                background-color: #f2f2f2;
+                border: 1px solid #ccc;
+                padding: 5px 10px;
+                border-radius: 3px;
+                font-size: 0.8rem;
+
+                &:hover {
+                    background-color: #e6e6e6;
+                }
+            }
+        }
+
+        #user-input {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            #input-options {
+                display: flex;
+            }
+        }
+    }
+}
+
 #chessboard {
     display: block;
-    width: 800px;
-    height: 800px;
+    width: 600px;
+    height: 600px;
     margin: auto;
     border: 1px solid black;
 }

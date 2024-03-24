@@ -1,4 +1,28 @@
-<div>
-    <canvas id="chessboard" height="800px" width="800px"></canvas>
+<div id="chessboard-component">
+    <div id="board">
+        <canvas id="chessboard" height="800px" width="800px"></canvas>
+    </div>
+
+    <div id="game-options">
+        <div id="navigation">
+            <div id="arrows">
+                <button type="button" id="up">&#8593;</button>
+                <button type="button" id="left">&#8592;</button>
+                <button type="button" id="down">&#8595;</button>
+                <button type="button" id="right">&#8594;</button>
+            </div>
+            <div id="board-options">
+                <button type="button" id="flip" (click)="flipBoard()">Flip</button>
+            </div>
+        </div>
+
+        <div id="user-input">
+            <label for="option">Import the game via: </label>
+            <select name="option" id="option" (change)="generateUI()">
+                <option value="pgn" selected>PGN</option>
+                <option value="chess-com">Chess.com</option>
+            </select>
+            <div id="input-options"></div>
+        </div>
+    </div>
 </div>
-<button type="button" id="flip" (click)="flipBoard()">Flip</button>

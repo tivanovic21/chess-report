@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { generate } from 'rxjs';
 import { LoadPiecesService } from '../services/load-pieces.service';
+import { Chess } from 'chess.js';
 
 @Component({
   selector: 'app-chess-board',
@@ -11,16 +12,49 @@ export class ChessBoardComponent implements OnInit {
 
   startPosition: string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   flipped: boolean = false;
+  selectedOption: string = 'pgn';
+  positions: string[] = [];
+  positionIndex: number = 0;
+  chess: Chess = new Chess();
 
   constructor(private loadPiecesService: LoadPiecesService){}
 
   ngOnInit(): void {
+    this.generateUI();
     this.generateBoard();
+    this.generatePieces(this.startPosition);
+  }
+
+  onOptionChange(event: Event): void {
+    this.selectedOption = (event.target as HTMLSelectElement).value;
+    this.generateUI();
   }
 
   flipBoard(): void {
     this.flipped = !this.flipped;
     this.generateBoard();
+    this.generatePieces(this.startPosition);
+  }
+
+  generateUI(): void {
+    const inputOptions = document.getElementById('input-options') as HTMLDivElement;
+    const selectedOption = document.getElementById('option') as HTMLSelectElement;
+
+    this.selectedOption = selectedOption.value;
+
+    if(this.selectedOption === 'pgn'){
+      inputOptions.innerHTML = '';
+      inputOptions.innerHTML = `<textarea id="pgnTextarea" rows="10" cols="40" placeholder="Enter PGN here"></textarea>`;
+      inputOptions.innerHTML += `<button type="button" id="loadGame">Load game!</button>`;
+
+      const loadGame = document.getElementById('loadGame') as HTMLButtonElement;
+      const pgnTextarea = document.getElementById('pgnTextarea') as HTMLTextAreaElement;
+      loadGame.addEventListener('click', () => this.loadGame(pgnTextarea.value));
+    }else if(this.selectedOption === 'chess-com'){
+      inputOptions.innerHTML = '';
+      inputOptions.innerHTML = `<input type="text" id="chessComInput" placeholder="${this.selectedOption.replace('-', '.')} username"/>`;
+      inputOptions.innerHTML += `<button type="button" id="fetchGames">Get games!</button>`;
+    }
   }
 
   generateBoard(): void {
@@ -64,8 +98,6 @@ export class ChessBoardComponent implements OnInit {
         ctx.fillText(numbers[i], canvas.width-10, (i + 0.1) * squareSize + 5);
       }
     }
-
-    this.generatePieces(this.startPosition);
   }
 
   async generatePieces(fen: string): Promise<void> {
@@ -93,5 +125,33 @@ export class ChessBoardComponent implements OnInit {
       }
     }
   }
+
+  loadGame(pgn: string): void {
+    try {
+      this.chess.loadPgn(pgn);
+      this.chess.history({verbose: true}).forEach((move) => {
+        this.positions.push(move.after);
+      });
+    }catch(err){
+      alert('Invalid PGN!');
+    }
+  }
+
+  //flickering na svakom moveu!
+  makeMove(direction: string): void {
+    const canvas = document.getElementById('chessboard') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    if (direction === 'forward') {
+      this.positionIndex++;
+    } else if (direction === 'back') {
+      this.positionIndex--;
+    }
+  
+    this.generateBoard();
+    this.generatePieces(this.positions[this.positionIndex]);
+  }
+  
   
 }
