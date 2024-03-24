@@ -6,10 +6,10 @@
     <div id="game-options">
         <div id="navigation">
             <div id="arrows">
-                <button type="button" id="up">&#8593;</button>
-                <button type="button" id="left">&#8592;</button>
-                <button type="button" id="down">&#8595;</button>
-                <button type="button" id="right">&#8594;</button>
+                <button type="button" id="up" (click)="makeMove('end')">&#8593;</button>
+                <button type="button" id="left" (click)="makeMove('back')">&#8592;</button>
+                <button type="button" id="down" (click)="makeMove('start')">&#8595;</button>
+                <button type="button" id="right" (click)="makeMove('next')">&#8594;</button>
             </div>
             <div id="board-options">
                 <button type="button" id="flip" (click)="flipBoard()">Flip</button>

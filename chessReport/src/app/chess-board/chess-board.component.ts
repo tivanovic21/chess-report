@@ -13,7 +13,9 @@ export class ChessBoardComponent implements OnInit {
   startPosition: string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   flipped: boolean = false;
   selectedOption: string = 'pgn';
-  positions: string[] = [];
+  positions: string[] = [
+    this.startPosition
+  ];
   positionIndex: number = 0;
   chess: Chess = new Chess();
 
@@ -44,7 +46,7 @@ export class ChessBoardComponent implements OnInit {
 
     if(this.selectedOption === 'pgn'){
       inputOptions.innerHTML = '';
-      inputOptions.innerHTML = `<textarea id="pgnTextarea" rows="10" cols="40" placeholder="Enter PGN here"></textarea>`;
+      inputOptions.innerHTML = `<textarea id="pgnTextarea" rows="10" cols="40" style="resize: none;" placeholder="Enter PGN here"></textarea>`;
       inputOptions.innerHTML += `<button type="button" id="loadGame">Load game!</button>`;
 
       const loadGame = document.getElementById('loadGame') as HTMLButtonElement;
@@ -142,13 +144,14 @@ export class ChessBoardComponent implements OnInit {
     const canvas = document.getElementById('chessboard') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if(direction === 'end') this.positionIndex = this.positions.length - 1;
+    if(direction === 'start') this.positionIndex = 0;
+    if(direction === 'next') this.positionIndex++;
+    if(direction === 'back') this.positionIndex--;
   
-    if (direction === 'forward') {
-      this.positionIndex++;
-    } else if (direction === 'back') {
-      this.positionIndex--;
-    }
-  
+    if(this.positionIndex < 0) this.positionIndex = 0;
+    if(this.positionIndex > this.positions.length - 1) this.positionIndex = this.positions.length - 1;
     this.generateBoard();
     this.generatePieces(this.positions[this.positionIndex]);
   }
