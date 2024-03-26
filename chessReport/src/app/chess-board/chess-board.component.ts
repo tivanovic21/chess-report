@@ -35,7 +35,7 @@ export class ChessBoardComponent implements OnInit {
   flipBoard(): void {
     this.flipped = !this.flipped;
     this.generateBoard();
-    this.generatePieces(this.startPosition);
+    this.generatePieces(this.positions[this.positionIndex]);
   }
 
   generateUI(): void {
@@ -139,8 +139,8 @@ export class ChessBoardComponent implements OnInit {
     }
   }
 
-  //flickering na svakom moveu!
-  makeMove(direction: string): void {
+  //flickering na brzim moveovima
+  async makeMove(direction: string): Promise<void> {
     const canvas = document.getElementById('chessboard') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -153,7 +153,7 @@ export class ChessBoardComponent implements OnInit {
     if(this.positionIndex < 0) this.positionIndex = 0;
     if(this.positionIndex > this.positions.length - 1) this.positionIndex = this.positions.length - 1;
     this.generateBoard();
-    this.generatePieces(this.positions[this.positionIndex]);
+    await this.generatePieces(this.positions[this.positionIndex]);
   }
   
   

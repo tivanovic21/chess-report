@@ -28,6 +28,7 @@ export class LoadPiecesService {
     return new Promise(resolve => {
       let image = new Image();
       image.src = `../../assets/pieces/${piece}.svg`;
+
       image.addEventListener("load", () => {
         resolve(image);
     });
