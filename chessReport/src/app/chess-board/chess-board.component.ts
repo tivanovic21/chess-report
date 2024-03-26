@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { generate } from 'rxjs';
 import { LoadPiecesService } from '../services/load-pieces.service';
 import { Chess } from 'chess.js';
+import { ChessComService } from '../services/chess-com.service';
+import { ChessComGame, ChessComGames } from '../types/chessComResponseI';
 
 @Component({
   selector: 'app-chess-board',
@@ -19,7 +20,10 @@ export class ChessBoardComponent implements OnInit {
   positionIndex: number = 0;
   chess: Chess = new Chess();
 
-  constructor(private loadPiecesService: LoadPiecesService){}
+  constructor(
+    private loadPiecesService: LoadPiecesService,
+    private chessComService: ChessComService
+  ){}
 
   ngOnInit(): void {
     this.generateUI();
@@ -56,6 +60,10 @@ export class ChessBoardComponent implements OnInit {
       inputOptions.innerHTML = '';
       inputOptions.innerHTML = `<input type="text" id="chessComInput" placeholder="${this.selectedOption.replace('-', '.')} username"/>`;
       inputOptions.innerHTML += `<button type="button" id="fetchGames">Get games!</button>`;
+
+      const fetchGames = document.getElementById('fetchGames') as HTMLButtonElement;
+      const chessComInput = document.getElementById('chessComInput') as HTMLInputElement;
+      fetchGames.addEventListener('click', () => this.fetchGames(chessComInput.value));
     }
   }
 
@@ -138,6 +146,64 @@ export class ChessBoardComponent implements OnInit {
       alert('Invalid PGN!');
     }
   }
+
+  async fetchGames(username: string): Promise<void> {
+    await this.chessComService.fetchArchives(username).then((data) => {
+      if(typeof data === 'string'){
+        alert('User not found!');
+      }else {
+        this.openModal(data.archives);
+      }
+    });
+  }
+
+  async openModal(archivedGames: string[] = []): Promise<void> {
+    const dialog = document.createElement('dialog') as HTMLDialogElement;
+    dialog.id = 'dialog';
+  
+    const header = document.createElement('h2');
+    header.textContent = 'Archived Games';
+    dialog.appendChild(header);
+
+    const content = document.createElement('div');
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'X';
+    closeButton.onclick = () => {
+      dialog.close();
+    };
+    dialog.appendChild(closeButton);
+    
+    for(let i=0; i<archivedGames.length; i++){
+      const button = document.createElement('button');
+      button.textContent = archivedGames[i];
+      button.onclick = async () => {
+        await this.chessComService.fetchGame(archivedGames[i]).then(async (data) =>{
+          let fetchedGames: ChessComGame[] = data.games;
+          content.innerHTML = '';
+          fetchedGames.forEach((game: ChessComGame) => {
+            const buttonGames = document.createElement('button');
+            buttonGames.textContent = `${game.white.username} vs ${game.black.username}`;
+            buttonGames.onclick = () => {
+              this.chess.loadPgn(game.pgn);
+              this.positions = [game.initial_setup];
+              this.chess.history({verbose: true}).forEach((move) => {
+                this.positions.push(move.after);
+              });
+              dialog.close();
+            };
+            content.appendChild(buttonGames);
+          })
+        });
+      };
+      content.appendChild(button);
+    }
+    dialog.appendChild(content);
+  
+    document.body.appendChild(dialog);
+    dialog.showModal();
+  }
+  
 
   //flickering na brzim moveovima
   async makeMove(direction: string): Promise<void> {
