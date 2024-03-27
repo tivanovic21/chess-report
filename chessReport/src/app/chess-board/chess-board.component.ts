@@ -145,6 +145,9 @@ export class ChessBoardComponent implements OnInit {
   loadGame(pgn: string): void {
     try {
       this.chess.loadPgn(pgn);
+      console.log(this.chess.header());
+      if(this.chess.header()['Site'] === 'Chess.com') this.checkChessComPGN();
+      else this.checkLiChessPGN();
       this.chess.history({verbose: true}).forEach((move) => {
         this.positions.push(move.after);
       });
@@ -153,15 +156,51 @@ export class ChessBoardComponent implements OnInit {
     }
   }
 
+  checkLiChessPGN(): void {
+    let blackRes = '';
+    let whiteRes = '';
+    if(Number(this.chess.header()['BlackRatingDiff']) > 0){
+      blackRes = 'won';
+      whiteRes = this.chess.header()['Termination'];
+    } else if(Number(this.chess.header()['WhiteRatingDiff']) > 0){
+      whiteRes = 'won';
+      blackRes = this.chess.header()['Termination'];
+    } else {
+      whiteRes = 'draw';
+      blackRes = 'draw';
+    }
+    this.whitePlayer = `${this.chess.header()['White']} (${this.chess.header()['WhiteElo']}) - ${whiteRes}`;
+    this.blackPlayer = `${this.chess.header()['Black']} (${this.chess.header()['BlackElo']}) - ${blackRes}`;
+  }
+
+  checkChessComPGN(): void {
+    let blackRes = '';
+    let whiteRes = '';
+    let result: string = this.chess.header()['Termination'];
+    let wordByWord: string[] = result.split(' ');
+    if(wordByWord[0] === this.chess.header()['White']){
+      whiteRes = wordByWord[1];
+      blackRes = wordByWord[3];
+    } else {
+      blackRes = wordByWord[1];
+      whiteRes = wordByWord[3];
+    }
+    this.whitePlayer = `${this.chess.header()['White']} (${this.chess.header()['WhiteElo']}) - ${whiteRes}`;
+    this.blackPlayer = `${this.chess.header()['Black']} (${this.chess.header()['BlackElo']}) - ${blackRes}`;
+  }
+
   async fetchGames(username: string): Promise<void> {
     await this.openModal([])
     await this.chessComService.fetchArchives(username).then((data) => {
       if(typeof data === 'string'){
         alert('User not found!');
+        if(document.getElementById('loadingDialog') as HTMLDialogElement !== null){
+          document.getElementById('loadingDialog')?.remove();
+        }
       }else {
         if(data.archives !== undefined){
           const archivedGames = data.archives.reverse();
-          this.openModal(data.archives); 
+          this.openModal(archivedGames); 
         }
       }
     });
@@ -238,6 +277,9 @@ export class ChessBoardComponent implements OnInit {
       buttonGames.onclick = () => {
         if(document.getElementById('loadingDialog') as HTMLDialogElement !== null){
           document.getElementById('loadingDialog')?.remove();
+        }
+        if(document.getElementById('dialog') as HTMLDialogElement !== null){
+          document.getElementById('dialog')?.remove();
         }
         this.whitePlayer = `${game.white.username} (${game.white.rating}) - ${game.white.result}`;
         this.blackPlayer = `${game.black.username} (${game.black.rating}) - ${game.black.result}`;
@@ -325,7 +367,5 @@ export class ChessBoardComponent implements OnInit {
     if(this.positionIndex > this.positions.length - 1) this.positionIndex = this.positions.length - 1;
     this.generateBoard();
     await this.generatePieces(this.positions[this.positionIndex]);
-  }
-  
-  
+  } 
 }

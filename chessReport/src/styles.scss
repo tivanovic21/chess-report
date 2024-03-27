@@ -1,3 +1,24 @@
 body {
     background-color: slategray;
 }
+
+#loadingDialog {
+    background-color: darkgray;
+    display: grid;
+    grid-column: auto;
+
+    button {
+        background-color: darkgray;
+        width: fit-content;
+        color: white;
+        border: 1px solid white;
+        border-radius: 5px;
+        padding: 5px;
+        margin: 5px;
+
+        &:hover {
+            background-color: white;
+            color: darkgray;
+        }
+    }
+}
