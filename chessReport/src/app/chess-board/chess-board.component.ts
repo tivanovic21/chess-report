@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LoadPiecesService } from '../services/load-pieces.service';
 import { Chess } from 'chess.js';
 import { ChessComService } from '../services/chess-com.service';
-import { ChessComGame, ChessComGames } from '../types/chessComResponseI';
+import { ChessComGame, ChessComGames, Months } from '../types/chessComResponseI';
 
 @Component({
   selector: 'app-chess-board',
@@ -19,6 +19,12 @@ export class ChessBoardComponent implements OnInit {
   ];
   positionIndex: number = 0;
   chess: Chess = new Chess();
+  whitePlayer: string = 'white (?)';
+  blackPlayer: string = 'black (?)';
+
+  currentPage: number = 0;
+  totalPages: number = 0;
+  archivedGames: string[] = [];
 
   constructor(
     private loadPiecesService: LoadPiecesService,
@@ -148,11 +154,15 @@ export class ChessBoardComponent implements OnInit {
   }
 
   async fetchGames(username: string): Promise<void> {
+    await this.openModal([])
     await this.chessComService.fetchArchives(username).then((data) => {
       if(typeof data === 'string'){
         alert('User not found!');
       }else {
-        this.openModal(data.archives);
+        if(data.archives !== undefined){
+          const archivedGames = data.archives.reverse();
+          this.openModal(data.archives); 
+        }
       }
     });
   }
@@ -165,43 +175,138 @@ export class ChessBoardComponent implements OnInit {
     header.textContent = 'Archived Games';
     dialog.appendChild(header);
 
+    const closeButton = document.createElement('button') as HTMLButtonElement;
+    closeButton.textContent = 'X';
+    closeButton.addEventListener('click', () => {
+      if(document.getElementById('loadingDialog') as HTMLDialogElement !== null){
+        document.getElementById('loadingDialog')?.remove();
+      }
+      dialog.close();
+    });
+    dialog.appendChild(closeButton);
+  
     const content = document.createElement('div');
 
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'X';
-    closeButton.onclick = () => {
+    if(archivedGames.length === 0){
+      dialog.id = 'loadingDialog';
+      const loading = document.createElement('h3');
+      loading.id = 'loading'
+      loading.textContent = 'Loading...';
+      content.appendChild(loading);
+      dialog.appendChild(content);
+      document.body.appendChild(dialog);
+      dialog.showModal();
+      return;
+    }
+
+    const buttonPrevious = document.createElement('button');
+    buttonPrevious.textContent = 'Previous';
+    buttonPrevious.onclick = async () => {
+      dialog.close();
+      await this.previousPage();
+    };
+    content.appendChild(buttonPrevious);
+  
+    const buttonNext = document.createElement('button');
+    buttonNext.textContent = 'Next';
+    buttonNext.onclick = async () => {
+      await this.nextPage();
       dialog.close();
     };
-    dialog.appendChild(closeButton);
-    
-    for(let i=0; i<archivedGames.length; i++){
-      const button = document.createElement('button');
-      button.textContent = archivedGames[i];
-      button.onclick = async () => {
-        await this.chessComService.fetchGame(archivedGames[i]).then(async (data) =>{
-          let fetchedGames: ChessComGame[] = data.games;
-          content.innerHTML = '';
-          fetchedGames.forEach((game: ChessComGame) => {
-            const buttonGames = document.createElement('button');
-            buttonGames.textContent = `${game.white.username} vs ${game.black.username}`;
-            buttonGames.onclick = () => {
-              this.chess.loadPgn(game.pgn);
-              this.positions = [game.initial_setup];
-              this.chess.history({verbose: true}).forEach((move) => {
-                this.positions.push(move.after);
-              });
-              dialog.close();
-            };
-            content.appendChild(buttonGames);
-          })
-        });
-      };
-      content.appendChild(button);
-    }
-    dialog.appendChild(content);
+    content.appendChild(buttonNext);
   
+    this.totalPages = archivedGames.length;
+    let date: string[] = archivedGames[this.currentPage].split('/');
+    let yearString = date[7];
+    let monthString = this.getMonthName(date[8]);
+    let headerDate = document.createElement('h3') as HTMLHeadingElement;
+    headerDate.innerHTML = `${monthString} ${yearString}`;
+    content.appendChild(headerDate);
+
+    if(this.currentPage === 0) buttonNext.disabled = true;
+    if(this.currentPage >= this.totalPages - 1) buttonPrevious.disabled = true;
+
+    const divGames = document.createElement('div') as HTMLDivElement;
+    const data = await this.chessComService.fetchGame(archivedGames[this.currentPage]);
+    this.archivedGames = archivedGames;
+    const fetchedGames: ChessComGame[] = data.games;
+
+    fetchedGames.forEach((game: ChessComGame) => {
+      const buttonGames = document.createElement('button');
+      divGames.appendChild(buttonGames);
+      buttonGames.textContent = `${game.white.username} vs ${game.black.username}`;
+      buttonGames.onclick = () => {
+        if(document.getElementById('loadingDialog') as HTMLDialogElement !== null){
+          document.getElementById('loadingDialog')?.remove();
+        }
+        this.whitePlayer = `${game.white.username} (${game.white.rating}) - ${game.white.result}`;
+        this.blackPlayer = `${game.black.username} (${game.black.rating}) - ${game.black.result}`;
+        this.chess.loadPgn(game.pgn);
+        this.positions = [game.initial_setup];
+        this.chess.history({ verbose: true }).forEach((move) => {
+          this.positions.push(move.after);
+        });
+        dialog.close();
+      };
+      content.appendChild(buttonGames);
+    });
+
+    content.appendChild(divGames);
+    dialog.appendChild(content);
+
     document.body.appendChild(dialog);
     dialog.showModal();
+  }
+  
+
+  getMonthName(value: string): string {
+    const monthMapping: { [key: string]: Months } = {
+      '01': Months.January,
+      '02': Months.February,
+      '03': Months.March,
+      '04': Months.April,
+      '05': Months.May,
+      '06': Months.June,
+      '07': Months.July,
+      '08': Months.August,
+      '09': Months.September,
+      '10': Months.October,
+      '11': Months.November,
+      '12': Months.December
+    };
+
+    const monthNameMapping: { [key in Months]: string } = {
+      [Months.January]: 'January',
+      [Months.February]: 'February',
+      [Months.March]: 'March',
+      [Months.April]: 'April',
+      [Months.May]: 'May',
+      [Months.June]: 'June',
+      [Months.July]: 'July',
+      [Months.August]: 'August',
+      [Months.September]: 'September',
+      [Months.October]: 'October',
+      [Months.November]: 'November',
+      [Months.December]: 'December'
+    };
+  
+    let month: Months = monthMapping[value as keyof typeof monthMapping];
+    return monthNameMapping[month];
+  }
+  
+
+  async nextPage(): Promise<void> {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      await this.openModal(this.archivedGames);
+    }
+  }
+  
+  async previousPage(): Promise<void> {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      await this.openModal(this.archivedGames);
+    }
   }
   
 

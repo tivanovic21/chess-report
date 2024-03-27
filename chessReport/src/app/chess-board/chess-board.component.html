@@ -1,6 +1,14 @@
 <div id="chessboard-component">
     <div id="board">
+        <div [ngSwitch]="flipped">
+            <div *ngSwitchCase="true">{{whitePlayer}}</div>
+            <div *ngSwitchDefault>{{blackPlayer}}</div>
+        </div>
         <canvas id="chessboard" height="800px" width="800px"></canvas>
+        <div [ngSwitch]="flipped">
+            <div *ngSwitchCase="true">{{blackPlayer}}</div>
+            <div *ngSwitchDefault>{{whitePlayer}}</div>
+        </div>
     </div>
 
     <div id="game-options">
