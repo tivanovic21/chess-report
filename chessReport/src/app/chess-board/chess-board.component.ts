@@ -3,6 +3,7 @@ import { LoadPiecesService } from '../services/load-pieces.service';
 import { Chess } from 'chess.js';
 import { ChessComService } from '../services/chess-com.service';
 import { ChessComGame, ChessComGames, Months } from '../types/chessComResponseI';
+import { ApiService } from '../services/api.service';
 
 @Component({
   selector: 'app-chess-board',
@@ -21,6 +22,7 @@ export class ChessBoardComponent implements OnInit {
   chess: Chess = new Chess();
   whitePlayer: string = 'white (?)';
   blackPlayer: string = 'black (?)';
+  loadedPGN: string = '';
 
   currentPage: number = 0;
   totalPages: number = 0;
@@ -28,7 +30,8 @@ export class ChessBoardComponent implements OnInit {
 
   constructor(
     private loadPiecesService: LoadPiecesService,
-    private chessComService: ChessComService
+    private chessComService: ChessComService,
+    private apiService: ApiService
   ){}
 
   ngOnInit(): void {
@@ -142,14 +145,17 @@ export class ChessBoardComponent implements OnInit {
     }
   }
 
-  loadGame(pgn: string): void {
+  async loadGame(pgn: string): Promise<void> {
     try {
       this.chess.loadPgn(pgn);
-      console.log(this.chess.header());
-      if(this.chess.header()['Site'] === 'Chess.com') this.checkChessComPGN();
-      else this.checkLiChessPGN();
-      this.chess.history({verbose: true}).forEach((move) => {
-        this.positions.push(move.after);
+      this.loadedPGN = pgn;
+      await this.apiService.parsePGN(pgn).then((data) => {
+        let headers = data.headers[0];
+        let positions = data.positions;
+        let site = headers[1]['value'];
+        if(site === 'Chess.com') this.checkChessComPGN();
+        else this.checkLiChessPGN();
+        this.positions = positions;
       });
     }catch(err){
       alert('Invalid PGN!');
@@ -187,6 +193,11 @@ export class ChessBoardComponent implements OnInit {
     }
     this.whitePlayer = `${this.chess.header()['White']} (${this.chess.header()['WhiteElo']}) - ${whiteRes}`;
     this.blackPlayer = `${this.chess.header()['Black']} (${this.chess.header()['BlackElo']}) - ${blackRes}`;
+  }
+
+  async analyse(): Promise<void> {
+    if(this.loadedPGN === '') return alert('No game loaded!');
+    console.log('mjau!');
   }
 
   async fetchGames(username: string): Promise<void> {
