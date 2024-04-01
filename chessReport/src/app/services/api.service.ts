@@ -14,13 +14,9 @@ export class ApiService {
       .then(response => response.json())
   }
 
-  async analyseGame(positions: any[]) {
-    return fetch(`${this.apiURL}/analyse`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ positions })
-    }).then(response => response.json())
+  async getOnlineStockfish(selectedGame: any) {
+    let fen = selectedGame.fen;
+    return fetch(`https://lichess.org/api/cloud-eval?fen=${fen}`)
+      .then(response => response.json())
   }
 }

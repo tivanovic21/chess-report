@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import pgnParser from 'pgn-parser';
 import { Chess } from 'chess.js';
 
@@ -27,14 +27,14 @@ api.get('/parse', (req: Request, res: Response) => {
       for (let move of parsed.moves) {
         let moveSan = (move as any).move;
   
-        let virtualBoard;
+        let checkingBoard;
         try {
-          virtualBoard = board.move(moveSan);
+            checkingBoard = board.move(moveSan);
         } catch (err) {
           return res.status(400).json({ message: 'PGN contains invalid moves.' });
         }
   
-        let moveUCI = virtualBoard.from + virtualBoard.to;
+        let moveUCI = checkingBoard.from + checkingBoard.to;
         positions.push({
           fen: board.fen(),
           move: {
@@ -49,32 +49,5 @@ api.get('/parse', (req: Request, res: Response) => {
   
     return res.status(200).json({headers: headers, positions: positions });
 });
-
-api.get('/analyse', (req: Request, res: Response) => {
-    const { positions } = req.body;
-    let analysis: any[] = [];
-  
-    if (!positions) {
-      return res.status(404).send('No positions provided.');
-    }
-  
-    for (let position of positions) {
-      let board = new Chess(position.fen);
-      let legalMoves = board.moves();
-      let bestMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-      let evaluation = Math.floor(Math.random() * 100) / 100;
-  
-      analysis.push({
-        fen: position.fen,
-        legalMoves: legalMoves,
-        bestMove: bestMove,
-        evaluation: evaluation,
-      });
-    }
-  
-    return res.status(200).json({ analysis: analysis });
-});
-  
-  
 
 export default api;

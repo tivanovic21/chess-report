@@ -4,6 +4,7 @@ import { Chess } from 'chess.js';
 import { ChessComService } from '../services/chess-com.service';
 import { ChessComGame, ChessComGames, Months } from '../types/chessComResponseI';
 import { ApiService } from '../services/api.service';
+import { StockfishService } from '../services/stockfish.service';
 
 @Component({
   selector: 'app-chess-board',
@@ -31,7 +32,8 @@ export class ChessBoardComponent implements OnInit {
   constructor(
     private loadPiecesService: LoadPiecesService,
     private chessComService: ChessComService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private stockfishService: StockfishService
   ){}
 
   ngOnInit(): void {
@@ -119,11 +121,15 @@ export class ChessBoardComponent implements OnInit {
     }
   }
 
-  async generatePieces(fen: string): Promise<void> {
+  async generatePieces(fen: any): Promise<void> {
     const canvas = document.getElementById('chessboard') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+
+    let fenString = '';
+    if(typeof fen === 'string') fenString = fen;
+    else fenString = fen.fen;
   
-    const pieces = fen.split(' ')[0];
+    const pieces = fenString.split(' ')[0];
     const rows = pieces.split('/');
     const squareSize = canvas.width / 8;
 
@@ -197,7 +203,9 @@ export class ChessBoardComponent implements OnInit {
 
   async analyse(): Promise<void> {
     if(this.loadedPGN === '') return alert('No game loaded!');
-    console.log('mjau!');
+    await this.stockfishService.evaluateGame(this.positions, 16).then((data: any) => {
+      console.log("data: ", data);
+    });
   }
 
   async fetchGames(username: string): Promise<void> {

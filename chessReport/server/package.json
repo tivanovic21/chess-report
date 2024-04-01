@@ -10,7 +10,8 @@
     "license": "ISC",
     "dependencies": {
         "express": "^4.18.1",
-        "pgn-parser": "^2.2.0"
+        "pgn-parser": "^2.2.0",
+        "stockfish": "^16.0.0"
     },
     "devDependencies": {
         "@types/pgn-parser": "^2.1.3",
